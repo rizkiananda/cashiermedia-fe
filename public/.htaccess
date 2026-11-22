@@ -1,0 +1,6 @@
+# SPA fallback: semua path yang bukan file/folder nyata dilayani index.html.
+# Substitusi relatif -> otomatis mengikuti folder tempat .htaccess ini berada.
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . index.html [L]

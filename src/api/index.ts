@@ -380,3 +380,41 @@ export const orderApi = {
 export const perusahaanApi = {
   list: () => unwrap<{ id: number; nama_perusahaan: string }[]>(client.get('/master/perusahaan-list')),
 }
+
+// ==== Pengaturan: Master User & Toko ====
+export interface Pengguna {
+  id: number
+  username: string
+  nama: string
+  tipe: string
+  status: string
+  alamat: string
+  no_telp: string
+  id_perusahaan: number
+}
+export interface Toko {
+  id: number
+  nama_toko: string
+  alamat: string
+  no_telp: string
+  id_perusahaan: number
+}
+export interface UserType {
+  id: number
+  nama: string
+  status: string
+}
+export const penggunaApi = {
+  types: () => unwrap<UserType[]>(client.get('/pengaturan/user-type')),
+  list: (search = '') => unwrap<Pengguna[]>(client.get('/pengaturan/user', { params: { search } })),
+  create: (payload: Partial<Pengguna> & { password: string }) =>
+    unwrap<Pengguna>(client.post('/pengaturan/user', payload)),
+  update: (id: number, payload: Partial<Pengguna> & { password?: string }) =>
+    client.put(`/pengaturan/user/${id}`, payload),
+  remove: (id: number) => client.delete(`/pengaturan/user/${id}`),
+}
+export const tokoApi = {
+  get: () => unwrap<Toko>(client.get('/pengaturan/toko')),
+  update: (payload: { nama_toko: string; no_telp: string; alamat: string }) =>
+    unwrap<Toko>(client.put('/pengaturan/toko', payload)),
+}

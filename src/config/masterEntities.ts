@@ -181,6 +181,25 @@ export const masterEntities: Record<string, MasterEntity> = {
       statusField,
     ],
   },
+  perusahaan: {
+    slug: 'perusahaan',
+    title: 'Perusahaan',
+    icon: 'pi pi-building',
+    path: '/master/perusahaan',
+    columns: [
+      { field: 'nama_perusahaan', header: 'Nama Perusahaan' },
+      { field: 'singkatan', header: 'Singkatan' },
+      { field: 'daerah', header: 'Daerah' },
+      { field: 'status', header: 'Status', type: 'status' },
+    ],
+    fields: [
+      { key: 'nama_perusahaan', label: 'Nama Perusahaan', type: 'text', required: true },
+      { key: 'tipe', label: 'Tipe', type: 'text' },
+      { key: 'daerah', label: 'Daerah', type: 'text' },
+      { key: 'singkatan', label: 'Singkatan', type: 'text', placeholder: 'Mis. BNC' },
+      statusField,
+    ],
+  },
   pelanggan: {
     slug: 'pelanggan',
     title: 'Pelanggan',

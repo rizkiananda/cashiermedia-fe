@@ -74,6 +74,13 @@ const navGroups: NavGroup[] = [
       { label: 'Laporan Ritase', icon: 'pi pi-map', to: '/app/ritase' },
     ],
   },
+  {
+    title: 'Pengaturan',
+    items: [
+      { label: 'Akun & Toko', icon: 'pi pi-user-edit', to: '/app/pengaturan' },
+      { label: 'Perusahaan', icon: 'pi pi-building', to: '/app/master/perusahaan' },
+    ],
+  },
 ]
 
 const allItems = computed(() => navGroups.flatMap((g) => g.items))

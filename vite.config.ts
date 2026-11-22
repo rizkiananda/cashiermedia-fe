@@ -3,7 +3,10 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // Mode "demo" dipakai untuk hosting di subfolder cPanel (public_html/demo-pos-v2).
+  // Mode lain tetap root agar deploy GitHub Pages (custom domain) tidak berubah.
+  base: mode === 'demo' ? '/demo-pos-v2/' : '/',
   plugins: [vue()],
   resolve: {
     alias: {
@@ -20,4 +23,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

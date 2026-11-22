@@ -54,9 +54,9 @@ function confirmClear() {
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
+  <div class="flex h-full min-h-0 flex-col">
     <!-- Pelanggan -->
-    <div class="border-b border-slate-200 p-4 dark:border-slate-800">
+    <div class="shrink-0 border-b border-slate-200 p-4 dark:border-slate-800">
       <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400">Pelanggan</label>
       <Select
         v-model="selectedPelangganId"
@@ -78,7 +78,7 @@ function confirmClear() {
     </div>
 
     <!-- Daftar item -->
-    <div class="scroll-area flex-1 p-4">
+    <div class="scroll-area min-h-0 flex-1 p-4">
       <div v-if="!cart.summary.items.length" class="flex h-full flex-col items-center justify-center text-center text-slate-400">
         <i class="pi pi-shopping-cart mb-3 text-4xl opacity-40"></i>
         <p class="text-sm">Keranjang masih kosong.<br />Pilih barang untuk memulai.</p>
@@ -112,7 +112,7 @@ function confirmClear() {
     </div>
 
     <!-- Ringkasan & aksi -->
-    <div class="border-t border-slate-200 p-4 dark:border-slate-800">
+    <div class="shrink-0 border-t border-slate-200 p-4 dark:border-slate-800">
       <div class="mb-3 flex items-center justify-between rounded-xl bg-slate-100 px-3 py-2 dark:bg-slate-800/60">
         <div>
           <p class="text-sm font-medium text-slate-700 dark:text-slate-200">PPN 11%</p>

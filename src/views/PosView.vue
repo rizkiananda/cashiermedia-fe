@@ -14,6 +14,7 @@ import AddProductDialog from '@/components/AddProductDialog.vue'
 import PaymentDialog from '@/components/PaymentDialog.vue'
 import InvoiceDialog from '@/components/InvoiceDialog.vue'
 import CartPanel from '@/components/CartPanel.vue'
+import ProductIcon from '@/components/ProductIcon.vue'
 
 const cart = useCartStore()
 const toast = useToast()
@@ -138,8 +139,8 @@ function hargaMulai(b: Barang): number {
         >
           <div class="relative aspect-square w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
             <img v-if="b.gambar" :src="b.gambar" :alt="b.nama_barang" class="h-full w-full object-cover" />
-            <div v-else class="grid h-full w-full place-items-center text-slate-300 dark:text-slate-600">
-              <i class="pi pi-box text-3xl"></i>
+            <div v-else class="grid h-full w-full place-items-center">
+              <ProductIcon class="h-3/5 w-3/5" />
             </div>
             <span
               class="absolute left-2 top-2 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 backdrop-blur dark:bg-slate-900/80"
@@ -167,7 +168,7 @@ function hargaMulai(b: Barang): number {
     <!-- Panel keranjang (desktop) -->
     <aside class="hidden lg:block">
       <div
-        class="sticky top-24 flex h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50
+        class="sticky top-24 flex h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50
                dark:border-slate-800 dark:bg-slate-900"
       >
         <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
@@ -196,7 +197,7 @@ function hargaMulai(b: Barang): number {
 
     <!-- Drawer keranjang (mobile) -->
     <Drawer v-model:visible="mobileCartOpen" position="right" class="!w-full sm:!w-96" header="Keranjang">
-      <CartPanel class="-mx-5 -mb-5 h-[calc(100vh-6rem)]" @pay="onPay" />
+      <CartPanel class="-mx-5 -mb-5 h-[calc(100dvh-6rem)]" @pay="onPay" />
     </Drawer>
 
     <!-- Dialog -->
