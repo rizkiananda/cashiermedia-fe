@@ -22,8 +22,10 @@ client.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401 && !err.config?.url?.includes('/auth/login')) {
       localStorage.removeItem('token')
-      if (location.pathname !== '/login') {
-        location.href = '/login'
+      // BASE_URL: '/' saat di root, '/pos/' bila di-build dengan --base=/pos/.
+      const loginPath = import.meta.env.BASE_URL + 'login'
+      if (location.pathname !== loginPath) {
+        location.href = loginPath
       }
     }
     return Promise.reject(err)

@@ -32,3 +32,4 @@ dist-ssr
 src/@iconify/*.js
 
 .env
+*.tsbuildinfo
