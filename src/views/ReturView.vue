@@ -6,11 +6,12 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
 import DatePicker from 'primevue/datepicker'
 import { useToast } from 'primevue/usetoast'
 import { returApi, catalogApi } from '@/api'
 import { errorMessage } from '@/api/client'
-import { rupiah } from '@/utils/format'
+import { rupiah, ymd } from '@/utils/format'
 import LineItemsEditor, { type LineItem } from '@/components/LineItemsEditor.vue'
 import type { Pelanggan } from '@/types'
 
@@ -25,8 +26,9 @@ const detailDialog = ref(false)
 const detail = ref<any>(null)
 const saving = ref(false)
 
-const form = reactive<{ id_pelanggan: number; tanggal: Date; keterangan: string; items: LineItem[] }>({
+const form = reactive<{ id_pelanggan: number; no_faktur: number | null; tanggal: Date; keterangan: string; items: LineItem[] }>({
   id_pelanggan: 0,
+  no_faktur: null,
   tanggal: new Date(),
   keterangan: '',
   items: [],
@@ -50,7 +52,7 @@ async function loadPelanggan() {
 }
 
 function openForm() {
-  Object.assign(form, { id_pelanggan: 0, tanggal: new Date(), keterangan: '', items: [] })
+  Object.assign(form, { id_pelanggan: 0, no_faktur: null, tanggal: new Date(), keterangan: '', items: [] })
   formDialog.value = true
 }
 
@@ -67,7 +69,8 @@ async function save() {
   try {
     await returApi.create({
       id_pelanggan: form.id_pelanggan,
-      tanggal: form.tanggal.toISOString().substring(0, 10),
+      no_faktur: form.no_faktur || undefined,
+      tanggal: ymd(form.tanggal),
       keterangan: form.keterangan,
       items: form.items.map((l) => ({ id_barang: l.id_barang, id_satuan: l.id_satuan, jumlah: l.jumlah, harga: l.harga, diskon: l.diskon })),
     })
@@ -118,10 +121,14 @@ async function viewDetail(id: number) {
     <!-- Form retur -->
     <Dialog v-model:visible="formDialog" modal header="Retur Baru" :style="{ width: '54rem' }" class="mx-4">
       <div class="space-y-4">
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div class="sm:col-span-1">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
             <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Pelanggan *</label>
             <Select v-model="form.id_pelanggan" :options="pelangganOpts" option-label="label" option-value="value" filter placeholder="Pilih pelanggan" fluid />
+          </div>
+          <div>
+            <label for="retur-no-faktur" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">No. Faktur</label>
+            <InputNumber v-model="form.no_faktur" input-id="retur-no-faktur" prefix="#" :use-grouping="false" :min="1" placeholder="Opsional" fluid />
           </div>
           <div>
             <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Tanggal</label>

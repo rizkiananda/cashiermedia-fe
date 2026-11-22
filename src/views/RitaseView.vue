@@ -5,7 +5,7 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import DatePicker from 'primevue/datepicker'
 import { ritaseApi } from '@/api'
-import { rupiah, angka } from '@/utils/format'
+import { rupiah, angka, ymd } from '@/utils/format'
 
 type TabKey = 'detail' | 'sopir' | 'kernet'
 const tab = ref<TabKey>('sopir')
@@ -22,7 +22,7 @@ const loading = ref(false)
 const rows = ref<any[]>([])
 
 function fmt(d: Date) {
-  return d.toISOString().substring(0, 10)
+  return ymd(d)
 }
 
 async function load() {

@@ -117,12 +117,41 @@ export interface Invoice {
   perusahaan: { nama_perusahaan: string; daerah: string; singkatan: string }
 }
 
+export interface RiwayatPiutang {
+  total_faktur: number
+  bayar_awal: number
+  nominal: number
+  terbayar: number
+  sisa: number
+  pembayaran: {
+    id: number
+    tanggal: string
+    jam: string
+    nominal: number
+    metode_bayar: string
+    keterangan: string
+  }[]
+}
+
+export interface LogHapusTransaksi {
+  id: number
+  id_rekap: number
+  tanggal_transaksi: string
+  nama_pelanggan: string
+  total: number
+  status: string
+  username: string
+  dihapus_pada: string
+}
+
 export interface TodaySale {
   id: number
+  tanggal: string
   jam: string
   nama_pelanggan: string
   total: number
   total_bayar: number
   status: string
   nomor_po: string
+  ada_retur: boolean
 }

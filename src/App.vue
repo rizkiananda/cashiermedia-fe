@@ -7,5 +7,5 @@ import ConfirmDialog from 'primevue/confirmdialog'
 <template>
   <RouterView />
   <Toast position="top-right" />
-  <ConfirmDialog />
+  <ConfirmDialog :style="{ width: '30rem' }" :breakpoints="{ '575px': 'calc(100vw - 2.5rem)' }" />
 </template>

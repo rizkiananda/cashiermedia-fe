@@ -63,7 +63,7 @@ function openAdd(barang: Barang) {
   addDialog.value = true
 }
 
-async function handleAdd(payload: { item: HargaItem; jumlah: number; diskon: number }) {
+async function handleAdd(payload: { item: HargaItem; harga: number; jumlah: number; diskon: number }) {
   if (!selectedBarang.value) return
   try {
     await cart.add({
@@ -71,7 +71,7 @@ async function handleAdd(payload: { item: HargaItem; jumlah: number; diskon: num
       id_satuan: payload.item.id_satuan,
       tipe_pelanggan: payload.item.tipe_pelanggan,
       jumlah: payload.jumlah,
-      harga: payload.item.harga_jual,
+      harga: payload.harga,
       diskon: payload.diskon,
       id_pelanggan: cart.pelanggan?.id ?? 0,
     })

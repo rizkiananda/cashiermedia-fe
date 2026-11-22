@@ -5,8 +5,9 @@ import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
+import DatePicker from 'primevue/datepicker'
 import { useToast } from 'primevue/usetoast'
-import { rupiah } from '@/utils/format'
+import { rupiah, ymd } from '@/utils/format'
 import { catalogApi, checkoutApi, type CheckoutPayload } from '@/api'
 import { errorMessage } from '@/api/client'
 import type { MetodePembayaran } from '@/types'
@@ -25,6 +26,7 @@ const metodeList = ref<MetodePembayaran[]>([])
 const metode = ref<number>(1)
 const bayar = ref<number>(0)
 const nomorPO = ref('')
+const tanggal = ref<Date>(new Date())
 const processing = ref(false)
 
 const total = computed(() => cart.summary.total)
@@ -44,6 +46,7 @@ watch(
     if (v) {
       bayar.value = cart.summary.total
       nomorPO.value = ''
+      tanggal.value = new Date()
       if (!metodeList.value.length) {
         try {
           metodeList.value = await catalogApi.metodePembayaran()
@@ -68,6 +71,7 @@ async function submit() {
       nomor_po: nomorPO.value,
       bayar: bayar.value,
       metode_pembayaran: metode.value,
+      tanggal: ymd(tanggal.value ?? new Date()),
     }
     const res = await checkoutApi.checkout(payload)
     toast.add({
@@ -103,6 +107,11 @@ async function submit() {
         <p class="mt-1 text-xs text-white/70">
           {{ cart.summary.items.length }} item · Pelanggan: {{ cart.pelanggan?.nama_pelanggan || '—' }}
         </p>
+      </div>
+
+      <div>
+        <label for="tgl-transaksi" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Tanggal transaksi</label>
+        <DatePicker v-model="tanggal" input-id="tgl-transaksi" date-format="dd/mm/yy" show-icon fluid />
       </div>
 
       <div>

@@ -12,6 +12,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { diskonApi, promoApi, catalogApi, type StrataInput } from '@/api'
 import { errorMessage } from '@/api/client'
+import { ymd } from '@/utils/format'
 import type { Barang } from '@/types'
 
 const toast = useToast()
@@ -86,8 +87,8 @@ async function saveDiskon() {
     await diskonApi.create({
       id_barang: pickedBarang.value.id,
       id_satuan: diskonForm.id_satuan,
-      tanggal_awal: diskonForm.tanggal_awal.toISOString().substring(0, 10),
-      tanggal_akhir: diskonForm.tanggal_akhir.toISOString().substring(0, 10),
+      tanggal_awal: ymd(diskonForm.tanggal_awal),
+      tanggal_akhir: ymd(diskonForm.tanggal_akhir),
       strata: diskonForm.strata,
     })
     toast.add({ severity: 'success', summary: 'Diskon tersimpan', life: 2000 })
@@ -177,8 +178,8 @@ async function savePromo() {
     await promoApi.create({
       barang: pickedBarangPromo.value.id,
       kelipatan_beli: promoForm.kelipatan_beli,
-      tanggal_awal: promoForm.tanggal_awal.toISOString().substring(0, 10),
-      tanggal_akhir: promoForm.tanggal_akhir.toISOString().substring(0, 10),
+      tanggal_awal: ymd(promoForm.tanggal_awal),
+      tanggal_akhir: ymd(promoForm.tanggal_akhir),
       hadiah: pickedHadiah.value.id,
       jumlah_hadiah: promoForm.jumlah_hadiah,
       satuan_hadiah: promoForm.satuan_hadiah,

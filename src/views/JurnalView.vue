@@ -11,7 +11,7 @@ import DatePicker from 'primevue/datepicker'
 import { useToast } from 'primevue/usetoast'
 import { jurnalApi } from '@/api'
 import { errorMessage } from '@/api/client'
-import { rupiah } from '@/utils/format'
+import { rupiah, ymd } from '@/utils/format'
 import CrudTable from '@/components/CrudTable.vue'
 
 const toast = useToast()
@@ -124,7 +124,7 @@ async function save() {
   saving.value = true
   try {
     await jurnalApi.createEntri({
-      tanggal: form.tanggal.toISOString().substring(0, 10),
+      tanggal: ymd(form.tanggal),
       keterangan: form.keterangan,
       id_master_kas: form.id_master_kas,
       lines: form.lines.filter((l) => l.id_master_akun),

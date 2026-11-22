@@ -12,7 +12,7 @@ import Tag from 'primevue/tag'
 import { useToast } from 'primevue/usetoast'
 import { pengirimanApi, checkoutApi } from '@/api'
 import { errorMessage } from '@/api/client'
-import { rupiah } from '@/utils/format'
+import { rupiah, ymd } from '@/utils/format'
 
 const toast = useToast()
 
@@ -61,7 +61,7 @@ function openForm() {
 async function save() {
   saving.value = true
   try {
-    await pengirimanApi.create({ ...form, tanggal: form.tanggal.toISOString().substring(0, 10) })
+    await pengirimanApi.create({ ...form, tanggal: ymd(form.tanggal) })
     toast.add({ severity: 'success', summary: 'Pengiriman dibuat', life: 2000 })
     formDialog.value = false
     await load()

@@ -11,6 +11,8 @@ import type {
   Pelanggan,
   Sales,
   TodaySale,
+  LogHapusTransaksi,
+  RiwayatPiutang,
   User,
 } from '@/types'
 
@@ -57,6 +59,12 @@ export const cartApi = {
   clear: () => unwrap<CartSummary>(client.delete('/cart')),
 }
 
+// Filter opsional daftar penjualan; null/undefined tidak dikirim.
+export interface FilterPenjualan {
+  pelanggan?: number | null
+  metode?: string | null
+}
+
 export interface CheckoutPayload {
   id_pelanggan: number
   nomor_po?: string
@@ -67,6 +75,7 @@ export interface CheckoutPayload {
   uang_muka?: number
   potongan?: number
   jatuh_tempo?: string
+  tanggal?: string // YYYY-MM-DD, default hari ini
 }
 
 export const checkoutApi = {
@@ -74,6 +83,10 @@ export const checkoutApi = {
     unwrap<CheckoutResult>(client.post('/checkout', payload)),
   invoice: (id: number) => unwrap<Invoice>(client.get(`/invoice/${id}`)),
   todaySales: () => unwrap<TodaySale[]>(client.get('/penjualan/today')),
+  sales: (start: string, end: string, filter?: FilterPenjualan) =>
+    unwrap<TodaySale[]>(client.get('/penjualan', { params: { start, end, ...filter } })),
+  deleteSale: (id: number) => client.delete(`/penjualan/${id}`),
+  logHapus: () => unwrap<LogHapusTransaksi[]>(client.get('/penjualan/log-hapus')),
 }
 
 // Factory CRUD generik untuk entitas master sederhana.
@@ -95,6 +108,7 @@ export interface BarangListRow {
   nama_golongan: string
   id_supplier: number
   nama_supplier: string
+  gambar: string
   status: string
   stok: number
   jumlah_harga: number
@@ -121,6 +135,14 @@ export const barangApi = {
   create: (payload: any) => unwrap<any>(client.post('/master/barang', payload)),
   update: (id: number, payload: any) => client.put(`/master/barang/${id}`, payload),
   remove: (id: number) => client.delete(`/master/barang/${id}`),
+  // Header multipart wajib: default client 'application/json' membuat axios mengubah FormData jadi JSON.
+  uploadGambar: (file: Blob) => {
+    const fd = new FormData()
+    fd.append('file', file, 'gambar')
+    return unwrap<{ url: string }>(
+      client.post('/master/barang/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    )
+  },
   addHarga: (id: number, payload: Partial<BarangHarga>) =>
     client.post(`/master/barang/${id}/harga`, payload),
   updateHarga: (itemId: number, payload: Partial<BarangHarga>) =>
@@ -175,6 +197,7 @@ export const returApi = {
   detail: (id: number) => unwrap<any>(client.get(`/retur/${id}`)),
   create: (payload: {
     id_pelanggan: number
+    no_faktur?: number
     tanggal?: string
     keterangan?: string
     items: Array<{ id_barang: number; id_satuan: number; jumlah: number; harga: number; diskon?: number }>
@@ -182,7 +205,9 @@ export const returApi = {
 }
 
 export const keuanganApi = {
-  piutang: () => unwrap<{ data: any[]; total_sisa: number }>(client.get('/piutang')),
+  piutang: (status: 'hutang' | 'lunas' = 'hutang') =>
+    unwrap<{ data: any[]; total_sisa: number }>(client.get('/piutang', { params: { status } })),
+  riwayatPiutang: (id: number) => unwrap<RiwayatPiutang>(client.get(`/piutang/${id}/riwayat`)),
   bayarPiutang: (id: number, payload: { nominal: number; metode_bayar?: string; keterangan?: string }) =>
     client.post(`/piutang/${id}/bayar`, payload),
   hutang: () => unwrap<{ data: any[]; total_sisa: number }>(client.get('/hutang')),
@@ -192,9 +217,9 @@ export const keuanganApi = {
     unwrap<{ data: any[]; total_omzet: number; total_modal: number; total_laba: number; start: string; end: string }>(
       client.get('/laba', { params: { start, end } }),
     ),
-  laporanPenjualan: (start?: string, end?: string) =>
+  laporanPenjualan: (start?: string, end?: string, filter?: FilterPenjualan) =>
     unwrap<{ data: any[]; total_omzet: number; total_terbayar: number; jumlah_faktur: number; start: string; end: string }>(
-      client.get('/laporan/penjualan', { params: { start, end } }),
+      client.get('/laporan/penjualan', { params: { start, end, ...filter } }),
     ),
   laporanPenjualanBarang: (start?: string, end?: string) =>
     unwrap<{ data: any[]; start: string; end: string }>(

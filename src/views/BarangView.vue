@@ -13,6 +13,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { barangApi, crudApi, type BarangListRow, type BarangHarga } from '@/api'
 import { errorMessage } from '@/api/client'
 import { rupiah, tipePelangganLabel } from '@/utils/format'
+import { compressImage } from '@/utils/image'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -33,8 +34,24 @@ const satuanOpts = ref<{ label: string; value: number }[]>([])
 // Dialog barang
 const barangDialog = ref(false)
 const editingBarang = ref<BarangListRow | null>(null)
-const barangForm = reactive({ kode_barang: '', nama_barang: '', id_golongan: 0, id_supplier: 0, status: 'aktif' })
+const barangForm = reactive({ kode_barang: '', nama_barang: '', id_golongan: 0, id_supplier: 0, gambar: '', status: 'aktif' })
 const savingBarang = ref(false)
+const uploadingGambar = ref(false)
+
+async function onPickGambar(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = '' // agar file yang sama bisa dipilih ulang
+  if (!file) return
+  uploadingGambar.value = true
+  try {
+    barangForm.gambar = (await barangApi.uploadGambar(await compressImage(file))).url
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Gagal upload', detail: errorMessage(err), life: 3000 })
+  } finally {
+    uploadingGambar.value = false
+  }
+}
 
 // Dialog harga
 const hargaDialog = ref(false)
@@ -95,7 +112,7 @@ function onSearch() {
 
 function openCreateBarang() {
   editingBarang.value = null
-  Object.assign(barangForm, { kode_barang: '', nama_barang: '', id_golongan: 0, id_supplier: 0, status: 'aktif' })
+  Object.assign(barangForm, { kode_barang: '', nama_barang: '', id_golongan: 0, id_supplier: 0, gambar: '', status: 'aktif' })
   barangDialog.value = true
 }
 function openEditBarang(row: BarangListRow) {
@@ -105,6 +122,7 @@ function openEditBarang(row: BarangListRow) {
     nama_barang: row.nama_barang,
     id_golongan: row.id_golongan,
     id_supplier: row.id_supplier,
+    gambar: row.gambar || '',
     status: row.status,
   })
   barangDialog.value = true
@@ -273,10 +291,32 @@ async function removeHarga(h: BarangHarga) {
           <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Supplier</label>
           <Select v-model="barangForm.id_supplier" :options="supplierOpts" option-label="label" option-value="value" filter placeholder="Pilih supplier" fluid />
         </div>
+        <div class="col-span-2">
+          <label for="gambar-barang" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Gambar</label>
+          <div class="flex items-center gap-3">
+            <div class="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+              <i v-if="uploadingGambar" class="pi pi-spin pi-spinner text-slate-400"></i>
+              <img v-else-if="barangForm.gambar" :src="barangForm.gambar" alt="Pratinjau gambar barang" class="h-full w-full object-cover" />
+              <i v-else class="pi pi-image text-2xl text-slate-400"></i>
+            </div>
+            <div class="flex flex-col items-start gap-1">
+              <input
+                id="gambar-barang"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                :disabled="uploadingGambar"
+                class="text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:font-medium file:text-indigo-700 dark:text-slate-300 dark:file:bg-indigo-500/10 dark:file:text-indigo-300"
+                @change="onPickGambar"
+              />
+              <span class="text-xs text-slate-500">JPG, PNG, atau WEBP.</span>
+              <Button v-if="barangForm.gambar" label="Hapus gambar" icon="pi pi-times" text size="small" severity="danger" class="!px-0" @click="barangForm.gambar = ''" />
+            </div>
+          </div>
+        </div>
       </div>
       <template #footer>
         <Button label="Batal" text severity="secondary" @click="barangDialog = false" />
-        <Button label="Simpan" icon="pi pi-check" :loading="savingBarang" @click="saveBarang" />
+        <Button label="Simpan" icon="pi pi-check" :loading="savingBarang" :disabled="uploadingGambar" @click="saveBarang" />
       </template>
     </Dialog>
 

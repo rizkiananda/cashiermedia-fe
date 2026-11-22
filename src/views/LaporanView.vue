@@ -8,8 +8,9 @@ import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import Tag from 'primevue/tag'
 import { keuanganApi, laporanJurnalApi, crudApi } from '@/api'
-import { rupiah, angka } from '@/utils/format'
+import { rupiah, angka, ymd } from '@/utils/format'
 import { exportCsv } from '@/utils/csv'
+import PelangganMetodeFilter from '@/components/PelangganMetodeFilter.vue'
 
 type TabKey =
   | 'penjualan' | 'barang' | 'per-sales' | 'pembelian' | 'pembayaran' | 'jurnal'
@@ -38,6 +39,8 @@ const singleDate = ref(new Date())
 const loading = ref(false)
 
 const penjualan = ref<any>({ data: [], total_omzet: 0, total_terbayar: 0, jumlah_faktur: 0 })
+const penjualanPelanggan = ref<number | null>(null)
+const penjualanMetode = ref<string | null>(null)
 const barang = ref<any>({ data: [] })
 const perSales = ref<any>({ data: [] })
 const pembelian = ref<any>({ data: [], total_pembelian: 0, jumlah_faktur: 0 })
@@ -56,7 +59,7 @@ const golonganFilter = ref<number | null>(null)
 const stokPergolongan = ref<any>({ data: [], total_nilai: 0 })
 
 function fmtDate(d: Date) {
-  return d.toISOString().substring(0, 10)
+  return ymd(d)
 }
 
 onMounted(async () => {
@@ -74,7 +77,7 @@ async function load() {
   const s = fmtDate(startDate.value)
   const e = fmtDate(endDate.value)
   try {
-    if (tab.value === 'penjualan') penjualan.value = await keuanganApi.laporanPenjualan(s, e)
+    if (tab.value === 'penjualan') penjualan.value = await keuanganApi.laporanPenjualan(s, e, { pelanggan: penjualanPelanggan.value, metode: penjualanMetode.value })
     else if (tab.value === 'barang') barang.value = await keuanganApi.laporanPenjualanBarang(s, e)
     else if (tab.value === 'per-sales') perSales.value = await keuanganApi.laporanPerSales(s, e)
     else if (tab.value === 'pembelian') pembelian.value = await keuanganApi.laporanPembelian(s, e, supplierFilter.value)
@@ -184,6 +187,12 @@ function doExport() {
           <DatePicker v-model="endDate" date-format="dd/mm/yy" />
         </div>
       </template>
+      <PelangganMetodeFilter
+        v-if="tab === 'penjualan'"
+        v-model:pelanggan="penjualanPelanggan"
+        v-model:metode="penjualanMetode"
+        label-class="mb-1 block text-xs font-medium text-slate-500"
+      />
       <div v-if="tab === 'rekap-kasir'">
         <label class="mb-1 block text-xs font-medium text-slate-500">Tanggal</label>
         <DatePicker v-model="singleDate" date-format="dd/mm/yy" />

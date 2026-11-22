@@ -10,7 +10,7 @@ import DatePicker from 'primevue/datepicker'
 import { useToast } from 'primevue/usetoast'
 import { pembelianApi, crudApi } from '@/api'
 import { errorMessage } from '@/api/client'
-import { rupiah } from '@/utils/format'
+import { rupiah, ymd } from '@/utils/format'
 import LineItemsEditor, { type LineItem } from '@/components/LineItemsEditor.vue'
 
 const toast = useToast()
@@ -69,7 +69,7 @@ async function save() {
   try {
     await pembelianApi.create({
       id_supplier: form.id_supplier,
-      tanggal: form.tanggal.toISOString().substring(0, 10),
+      tanggal: ymd(form.tanggal),
       ongkos_angkut: form.ongkos_angkut,
       bayar: form.bayar,
       items: form.items.map((l) => ({ id_barang: l.id_barang, id_satuan: l.id_satuan, jumlah: l.jumlah, harga: l.harga })),

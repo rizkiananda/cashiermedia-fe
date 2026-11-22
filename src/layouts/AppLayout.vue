@@ -26,7 +26,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Dashboard', icon: 'pi pi-th-large', to: '/app' },
       { label: 'Kasir', icon: 'pi pi-shopping-cart', to: '/app/kasir' },
-      { label: 'Penjualan Hari Ini', icon: 'pi pi-receipt', to: '/app/penjualan' },
+      { label: 'Riwayat Transaksi', icon: 'pi pi-receipt', to: '/app/penjualan' },
       { label: 'Order Online', icon: 'pi pi-globe', to: '/app/order-online' },
     ],
   },

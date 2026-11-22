@@ -10,18 +10,23 @@ import type { Barang, HargaItem } from '@/types'
 const props = defineProps<{ visible: boolean; barang: Barang | null }>()
 const emit = defineEmits<{
   'update:visible': [boolean]
-  add: [{ item: HargaItem; jumlah: number; diskon: number }]
+  add: [{ item: HargaItem; harga: number; jumlah: number; diskon: number }]
 }>()
 
 const selected = ref<HargaItem | null>(null)
+const harga = ref(0)
 const jumlah = ref(1)
 const diskon = ref(0)
+
+// Ganti satuan → harga kembali ke harga jual satuan tsb.
+watch(selected, (it) => (harga.value = it?.harga_jual ?? 0))
 
 watch(
   () => props.visible,
   (v) => {
     if (v && props.barang) {
       selected.value = props.barang.items[0] ?? null
+      harga.value = selected.value?.harga_jual ?? 0
       jumlah.value = 1
       diskon.value = 0
     }
@@ -29,13 +34,12 @@ watch(
 )
 
 const subtotal = computed(() => {
-  const h = selected.value?.harga_jual ?? 0
-  return h * jumlah.value - diskon.value
+  return (harga.value ?? 0) * jumlah.value - diskon.value
 })
 
 function submit() {
   if (!selected.value) return
-  emit('add', { item: selected.value, jumlah: jumlah.value, diskon: diskon.value })
+  emit('add', { item: selected.value, harga: harga.value ?? 0, jumlah: jumlah.value, diskon: diskon.value })
   emit('update:visible', false)
 }
 </script>
@@ -81,6 +85,11 @@ function submit() {
             Barang ini belum memiliki harga/satuan.
           </p>
         </div>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Harga satuan (Rp)</label>
+        <InputNumber v-model="harga" :min="0" mode="currency" currency="IDR" locale="id-ID" fluid />
       </div>
 
       <div class="grid grid-cols-2 gap-3">
