@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { useConfirm } from 'primevue/useconfirm'
-import { catalogApi } from '@/api'
+import { useToast } from 'primevue/usetoast'
+import { catalogApi, crudApi } from '@/api'
+import { errorMessage } from '@/api/client'
 import { rupiah } from '@/utils/format'
 import type { Pelanggan } from '@/types'
 import { useCartStore } from '@/stores/cart'
@@ -13,6 +18,7 @@ defineEmits<{ pay: [] }>()
 
 const cart = useCartStore()
 const confirm = useConfirm()
+const toast = useToast()
 
 const pelangganList = ref<Pelanggan[]>([])
 const selectedPelangganId = ref<number | null>(null)
@@ -28,6 +34,48 @@ watch(selectedPelangganId, (id) => {
 })
 
 watch(ppnAktif, (v) => cart.setPPN(v ? 11 : 0))
+
+// Tambah pelanggan baru langsung dari kasir.
+const selectRef = ref<any>(null)
+const filterText = ref('')
+const pelangganDialog = ref(false)
+const savingPelanggan = ref(false)
+const form = reactive({ nama_pelanggan: '', no_telp: '', alamat: '', kota: '' })
+const namaSama = computed(() => {
+  const n = form.nama_pelanggan.trim().toLowerCase()
+  return n ? pelangganList.value.find((p) => p.nama_pelanggan.trim().toLowerCase() === n) : undefined
+})
+
+function openPelangganBaru() {
+  selectRef.value?.hide?.()
+  Object.assign(form, { nama_pelanggan: filterText.value.trim(), no_telp: '', alamat: '', kota: '' })
+  pelangganDialog.value = true
+}
+
+function pilihYangAda(p: Pelanggan) {
+  selectedPelangganId.value = p.id
+  pelangganDialog.value = false
+}
+
+async function simpanPelanggan() {
+  const nama = form.nama_pelanggan.trim()
+  if (!nama) {
+    toast.add({ severity: 'warn', summary: 'Nama pelanggan wajib diisi', life: 2500 })
+    return
+  }
+  savingPelanggan.value = true
+  try {
+    const p = await crudApi<Pelanggan>('/master/pelanggan').create({ ...form, nama_pelanggan: nama, status: 'aktif' } as Partial<Pelanggan>)
+    pelangganList.value = [...pelangganList.value, p].sort((a, b) => a.nama_pelanggan.localeCompare(b.nama_pelanggan))
+    selectedPelangganId.value = p.id
+    pelangganDialog.value = false
+    toast.add({ severity: 'success', summary: 'Pelanggan ditambahkan', detail: nama, life: 2000 })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Gagal menyimpan', detail: errorMessage(e), life: 3000 })
+  } finally {
+    savingPelanggan.value = false
+  }
+}
 
 function incQty(id: number, qty: number) {
   cart.updateQty(id, qty + 1)
@@ -58,23 +106,70 @@ function confirmClear() {
     <!-- Pelanggan -->
     <div class="shrink-0 border-b border-slate-200 p-4 dark:border-slate-800">
       <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400">Pelanggan</label>
-      <Select
-        v-model="selectedPelangganId"
-        :options="pelangganList"
-        option-label="nama_pelanggan"
-        option-value="id"
-        filter
-        placeholder="Pilih pelanggan"
-        fluid
-        :pt="{ root: 'w-full' }"
-      >
-        <template #option="{ option }">
+      <div class="flex gap-2">
+        <Select
+          ref="selectRef"
+          v-model="selectedPelangganId"
+          :options="pelangganList"
+          option-label="nama_pelanggan"
+          option-value="id"
+          filter
+          placeholder="Pilih pelanggan"
+          class="min-w-0 flex-1"
+          @filter="filterText = $event.value"
+          @show="filterText = ''"
+        >
+          <template #option="{ option }">
+            <div>
+              <p class="font-medium">{{ option.nama_pelanggan }}</p>
+              <p class="text-xs text-slate-400">{{ option.alamat || 'Tanpa alamat' }}</p>
+            </div>
+          </template>
+          <template #emptyfilter>
+            <div class="py-2 text-center">
+              <p class="mb-2 text-sm text-slate-400">Pelanggan tidak ditemukan.</p>
+              <Button :label="`Tambah &quot;${filterText}&quot;`" icon="pi pi-user-plus" size="small" @click="openPelangganBaru" />
+            </div>
+          </template>
+        </Select>
+        <Button
+          icon="pi pi-user-plus"
+          severity="secondary"
+          outlined
+          aria-label="Tambah pelanggan baru"
+          v-tooltip.bottom="'Pelanggan baru'"
+          @click="openPelangganBaru"
+        />
+      </div>
+
+      <Dialog v-model:visible="pelangganDialog" modal header="Pelanggan Baru" :style="{ width: '28rem' }" :breakpoints="{ '575px': 'calc(100vw - 2.5rem)' }">
+        <form class="space-y-4" @submit.prevent="simpanPelanggan">
           <div>
-            <p class="font-medium">{{ option.nama_pelanggan }}</p>
-            <p class="text-xs text-slate-400">{{ option.alamat || 'Tanpa alamat' }}</p>
+            <label for="plg-nama" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Nama pelanggan *</label>
+            <InputText id="plg-nama" v-model="form.nama_pelanggan" autofocus fluid />
+            <p v-if="namaSama" class="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+              Nama ini sudah terdaftar.
+              <button type="button" class="font-semibold underline" @click="pilihYangAda(namaSama)">Pilih yang sudah ada</button>
+            </p>
           </div>
-        </template>
-      </Select>
+          <div>
+            <label for="plg-telp" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">No. telepon</label>
+            <InputText id="plg-telp" v-model="form.no_telp" type="tel" fluid />
+          </div>
+          <div>
+            <label for="plg-alamat" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Alamat</label>
+            <Textarea id="plg-alamat" v-model="form.alamat" rows="2" auto-resize fluid />
+          </div>
+          <div>
+            <label for="plg-kota" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Kota</label>
+            <InputText id="plg-kota" v-model="form.kota" fluid />
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <Button type="button" label="Batal" text severity="secondary" @click="pelangganDialog = false" />
+            <Button type="submit" label="Simpan & Pilih" icon="pi pi-check" :loading="savingPelanggan" />
+          </div>
+        </form>
+      </Dialog>
     </div>
 
     <!-- Daftar item -->

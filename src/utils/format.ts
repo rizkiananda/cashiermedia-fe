@@ -19,17 +19,3 @@ export function angka(value: number | null | undefined): string {
 export function ymd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
-
-// Label tipe pelanggan (dipakai di pemilihan harga).
-export function tipePelangganLabel(tipe: number): string {
-  switch (tipe) {
-    case 1:
-      return 'Grosir'
-    case 2:
-      return 'Semi Grosir'
-    case 3:
-      return 'Retail'
-    default:
-      return `Tipe ${tipe}`
-  }
-}

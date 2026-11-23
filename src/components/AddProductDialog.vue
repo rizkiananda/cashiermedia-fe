@@ -4,7 +4,9 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 import RadioButton from 'primevue/radiobutton'
-import { rupiah, tipePelangganLabel } from '@/utils/format'
+import SelectButton from 'primevue/selectbutton'
+import { rupiah } from '@/utils/format'
+import { useTipePelanggan } from '@/composables/useTipePelanggan'
 import type { Barang, HargaItem } from '@/types'
 
 const props = defineProps<{ visible: boolean; barang: Barang | null }>()
@@ -18,14 +20,27 @@ const harga = ref(0)
 const jumlah = ref(1)
 const diskon = ref(0)
 
+// Tipe pelanggan menentukan daftar harga yang tampil; default Retail.
+const { list: tipeList, label: tipeLabel, defaultId: tipeDefault, ready: tipeReady } = useTipePelanggan()
+const tipe = ref(1)
+const items = computed(() => props.barang?.items.filter((i) => i.tipe_pelanggan === tipe.value) ?? [])
+
+// Ganti tipe → pertahankan satuan yang sama bila ada, selain itu satuan pertama.
+watch(tipe, () => {
+  const satuan = selected.value?.id_satuan
+  selected.value = items.value.find((i) => i.id_satuan === satuan) ?? items.value[0] ?? null
+})
+
 // Ganti satuan → harga kembali ke harga jual satuan tsb.
 watch(selected, (it) => (harga.value = it?.harga_jual ?? 0))
 
 watch(
   () => props.visible,
-  (v) => {
+  async (v) => {
     if (v && props.barang) {
-      selected.value = props.barang.items[0] ?? null
+      await tipeReady()
+      tipe.value = tipeDefault()
+      selected.value = items.value[0] ?? null
       harga.value = selected.value?.harga_jual ?? 0
       jumlah.value = 1
       diskon.value = 0
@@ -58,13 +73,27 @@ function submit() {
         Kode: {{ barang.kode_barang || '-' }} · Stok: {{ barang.stok }}
       </p>
 
+      <div v-if="tipeList.length > 1">
+        <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Tipe pelanggan</label>
+        <SelectButton
+          v-model="tipe"
+          :options="tipeList"
+          option-label="nama"
+          option-value="id"
+          :allow-empty="false"
+          aria-label="Tipe pelanggan"
+          class="w-full"
+          :pt="{ pcToggleButton: { root: 'flex-1' } }"
+        />
+      </div>
+
       <div>
         <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
           Pilih satuan & harga
         </label>
         <div class="space-y-2">
           <label
-            v-for="it in barang.items"
+            v-for="it in items"
             :key="it.id_item_barang"
             class="flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors"
             :class="selected?.id_item_barang === it.id_item_barang
@@ -77,12 +106,11 @@ function submit() {
                 {{ it.nama_satuan }}
                 <span class="ml-1 text-xs text-slate-400">(isi {{ it.konversi }})</span>
               </p>
-              <p class="text-xs text-slate-500">{{ tipePelangganLabel(it.tipe_pelanggan) }}</p>
             </div>
             <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ rupiah(it.harga_jual) }}</span>
           </label>
-          <p v-if="!barang.items.length" class="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-            Barang ini belum memiliki harga/satuan.
+          <p v-if="!items.length" class="rounded-lg bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+            {{ barang.items.length ? `Belum ada harga ${tipeLabel(tipe)} untuk barang ini.` : 'Barang ini belum memiliki harga/satuan.' }}
           </p>
         </div>
       </div>

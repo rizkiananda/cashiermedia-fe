@@ -38,6 +38,11 @@ export interface Pelanggan {
   tipe: string
 }
 
+export interface TipePelanggan {
+  id: number
+  nama: string
+}
+
 export interface MetodePembayaran {
   id: number
   pembayaran: string

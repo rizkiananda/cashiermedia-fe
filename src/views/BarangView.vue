@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -12,7 +12,8 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { barangApi, crudApi, type BarangListRow, type BarangHarga } from '@/api'
 import { errorMessage } from '@/api/client'
-import { rupiah, tipePelangganLabel } from '@/utils/format'
+import { rupiah } from '@/utils/format'
+import { useTipePelanggan } from '@/composables/useTipePelanggan'
 import { compressImage } from '@/utils/image'
 
 const toast = useToast()
@@ -57,14 +58,12 @@ async function onPickGambar(e: Event) {
 const hargaDialog = ref(false)
 const hargaBarang = ref<BarangListRow | null>(null)
 const hargaList = ref<BarangHarga[]>([])
-const hargaForm = reactive({ id_satuan: 0, harga_jual: 0, konversi: 1, tipe_pelanggan: 3, kode: '' })
+// Satuan terkecil (isi 1) — acuan kolom "isi" dan satuan stok.
+const satuanDasar = computed(() => hargaList.value.find((h) => h.konversi === 1)?.nama_satuan ?? 'satuan terkecil')
+const { list: tipeOpts, label: tipePelangganLabel, defaultId: tipeDefault } = useTipePelanggan()
+const hargaForm = reactive({ id_satuan: 0, harga_jual: 0, konversi: 1, tipe_pelanggan: tipeDefault(), kode: '' })
 const savingHarga = ref(false)
 
-const tipeOpts = [
-  { label: 'Grosir', value: 1 },
-  { label: 'Semi Grosir', value: 2 },
-  { label: 'Retail', value: 3 },
-]
 
 onMounted(async () => {
   await Promise.all([load(), loadRefs()])
@@ -74,7 +73,7 @@ async function loadRefs() {
   const [gol, sup, sat] = await Promise.all([
     crudApi<any>('/master/golongan').list(),
     crudApi<any>('/master/supplier').list(),
-    crudApi<any>('/master/satuan').list(),
+    crudApi<any>('/master/satuan').list('', 'aktif'),
   ])
   golonganOpts.value = gol.map((g: any) => ({ label: g.nama_golongan, value: g.id }))
   supplierOpts.value = sup.map((s: any) => ({ label: s.nama_supplier, value: s.id }))
@@ -168,13 +167,14 @@ function confirmDeleteBarang(row: BarangListRow) {
 async function openHarga(row: BarangListRow) {
   hargaBarang.value = row
   hargaDialog.value = true
-  Object.assign(hargaForm, { id_satuan: 0, harga_jual: 0, konversi: 1, tipe_pelanggan: 3, kode: '' })
+  hargaList.value = [] // jangan tampilkan harga barang sebelumnya selama memuat
+  Object.assign(hargaForm, { id_satuan: 0, harga_jual: 0, konversi: 1, tipe_pelanggan: tipeDefault(), kode: '' })
   await refreshHarga()
 }
 async function refreshHarga() {
   if (!hargaBarang.value) return
   const detail = await barangApi.detail(hargaBarang.value.id)
-  hargaList.value = detail.harga
+  hargaList.value = detail.harga ?? []
 }
 async function addHarga() {
   if (!hargaBarang.value) return
@@ -185,7 +185,7 @@ async function addHarga() {
   savingHarga.value = true
   try {
     await barangApi.addHarga(hargaBarang.value.id, hargaForm)
-    Object.assign(hargaForm, { id_satuan: 0, harga_jual: 0, konversi: 1, tipe_pelanggan: 3, kode: '' })
+    Object.assign(hargaForm, { id_satuan: 0, harga_jual: 0, konversi: 1, tipe_pelanggan: tipeDefault(), kode: '' })
     await refreshHarga()
     toast.add({ severity: 'success', summary: 'Harga ditambahkan', life: 2000 })
   } catch (e) {
@@ -327,7 +327,7 @@ async function removeHarga(h: BarangHarga) {
         <table class="w-full text-sm">
           <thead class="bg-slate-100 text-left text-xs uppercase text-slate-500 dark:bg-slate-800">
             <tr>
-              <th class="p-2">Satuan</th><th class="p-2">Tipe</th><th class="p-2">Isi</th><th class="p-2 text-right">Harga</th><th class="p-2"></th>
+              <th class="p-2">Satuan</th><th class="p-2">Tipe</th><th class="p-2">Isi ({{ satuanDasar }})</th><th class="p-2 text-right">Harga</th><th class="p-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -348,13 +348,29 @@ async function removeHarga(h: BarangHarga) {
       <!-- Form tambah harga -->
       <div class="rounded-xl bg-slate-100 p-4 dark:bg-slate-800/60">
         <p class="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">Tambah harga</p>
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <Select v-model="hargaForm.id_satuan" :options="satuanOpts" option-label="label" option-value="value" filter placeholder="Satuan" class="col-span-2 sm:col-span-1" fluid />
-          <Select v-model="hargaForm.tipe_pelanggan" :options="tipeOpts" option-label="label" option-value="value" placeholder="Tipe" fluid />
-          <InputNumber v-model="hargaForm.konversi" :min="1" placeholder="Isi" fluid />
-          <InputNumber v-model="hargaForm.harga_jual" mode="currency" currency="IDR" locale="id-ID" placeholder="Harga" fluid />
+        <div class="grid grid-cols-2 items-end gap-3 sm:grid-cols-5">
+          <div class="col-span-2 sm:col-span-1">
+            <label for="harga-satuan" class="mb-1 block text-xs text-slate-500 dark:text-slate-400">Satuan</label>
+            <Select v-model="hargaForm.id_satuan" input-id="harga-satuan" :options="satuanOpts" option-label="label" option-value="value" filter placeholder="Pilih" fluid />
+          </div>
+          <div>
+            <label for="harga-tipe" class="mb-1 block text-xs text-slate-500 dark:text-slate-400">Tipe</label>
+            <Select v-model="hargaForm.tipe_pelanggan" input-id="harga-tipe" :options="tipeOpts" option-label="nama" option-value="id" fluid />
+          </div>
+          <div>
+            <label for="harga-isi" class="mb-1 block text-xs text-slate-500 dark:text-slate-400">Isi ({{ satuanDasar }})</label>
+            <InputNumber v-model="hargaForm.konversi" input-id="harga-isi" :min="1" fluid />
+          </div>
+          <div>
+            <label for="harga-jual" class="mb-1 block text-xs text-slate-500 dark:text-slate-400">Harga</label>
+            <InputNumber v-model="hargaForm.harga_jual" input-id="harga-jual" mode="currency" currency="IDR" locale="id-ID" fluid />
+          </div>
           <Button label="Tambah" icon="pi pi-plus" :loading="savingHarga" @click="addHarga" />
         </div>
+        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
+          <i class="pi pi-info-circle mr-1" />Isi = jumlah {{ satuanDasar }} dalam 1 satuan tersebut.
+          Contoh: 1 DUS berisi 24 {{ satuanDasar }} → isi 24. Satuan terkecil isinya 1, dan stok dihitung dalam satuan ini.
+        </p>
       </div>
 
       <template #footer>

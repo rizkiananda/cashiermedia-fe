@@ -13,6 +13,7 @@ import type {
   TodaySale,
   LogHapusTransaksi,
   RiwayatPiutang,
+  TipePelanggan,
   User,
 } from '@/types'
 
@@ -36,6 +37,7 @@ export const catalogApi = {
   sales: () => unwrap<Sales[]>(client.get('/catalog/sales')),
   metodePembayaran: () =>
     unwrap<MetodePembayaran[]>(client.get('/catalog/metode-pembayaran')),
+  tipePelanggan: () => unwrap<TipePelanggan[]>(client.get('/catalog/tipe-pelanggan')),
 }
 
 export interface AddItemPayload {
@@ -92,7 +94,7 @@ export const checkoutApi = {
 // Factory CRUD generik untuk entitas master sederhana.
 export function crudApi<T = any>(path: string) {
   return {
-    list: (search = '') => unwrap<T[]>(client.get(path, { params: { search } })),
+    list: (search = '', status?: string) => unwrap<T[]>(client.get(path, { params: { search, status } })),
     get: (id: number) => unwrap<T>(client.get(`${path}/${id}`)),
     create: (payload: Partial<T>) => unwrap<T>(client.post(path, payload)),
     update: (id: number, payload: Partial<T>) => client.put(`${path}/${id}`, payload),

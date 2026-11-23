@@ -15,6 +15,7 @@ import PaymentDialog from '@/components/PaymentDialog.vue'
 import InvoiceDialog from '@/components/InvoiceDialog.vue'
 import CartPanel from '@/components/CartPanel.vue'
 import ProductIcon from '@/components/ProductIcon.vue'
+import { useTipePelanggan } from '@/composables/useTipePelanggan'
 
 const cart = useCartStore()
 const toast = useToast()
@@ -92,10 +93,12 @@ async function onPaid(rekapId: number) {
   await cart.refresh()
 }
 
-// Harga termurah untuk ditampilkan di kartu produk.
+// Harga Retail termurah untuk kartu produk (bila tak ada harga Retail, termurah dari semua tipe).
+const { defaultId: tipeDefault } = useTipePelanggan()
 function hargaMulai(b: Barang): number {
   if (!b.items?.length) return 0
-  return Math.min(...b.items.map((i) => i.harga_jual))
+  const retail = b.items.filter((i) => i.tipe_pelanggan === tipeDefault())
+  return Math.min(...(retail.length ? retail : b.items).map((i) => i.harga_jual))
 }
 </script>
 

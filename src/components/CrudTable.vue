@@ -40,14 +40,17 @@ interface CrudApi {
   remove: (id: number) => Promise<any>
 }
 
-const props = defineProps<{
-  title: string
-  api: CrudApi
-  columns: CrudColumn[]
-  fields: CrudField[]
-  searchable?: boolean
-  entityLabel?: string // untuk pesan, mis. "satuan"
-}>()
+const props = withDefaults(
+  defineProps<{
+    title: string
+    api: CrudApi
+    columns: CrudColumn[]
+    fields: CrudField[]
+    searchable?: boolean
+    entityLabel?: string // untuk pesan, mis. "satuan"
+  }>(),
+  { searchable: true },
+)
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -159,7 +162,7 @@ function confirmDelete(row: any) {
   <div class="space-y-4">
     <!-- Header -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div v-if="searchable !== false" class="relative w-full sm:max-w-xs">
+      <div v-if="searchable" class="relative w-full sm:max-w-xs">
         <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <InputText v-model="search" placeholder="Cari…" class="w-full !pl-10" />
       </div>
