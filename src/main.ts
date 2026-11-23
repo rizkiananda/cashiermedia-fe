@@ -26,6 +26,16 @@ const CashierMediaPreset = definePreset(Aura, {
   },
 })
 
+// Setelah deploy, file JS lama dihapus; tab yang masih terbuka gagal memuat halaman
+// berikutnya. Muat ulang sekali agar memakai versi baru (jeda 10 dtk mencegah loop).
+window.addEventListener('vite:preloadError', () => {
+  const last = Number(sessionStorage.getItem('reloadAfterDeploy') || 0)
+  if (Date.now() - last > 10_000) {
+    sessionStorage.setItem('reloadAfterDeploy', String(Date.now()))
+    location.reload()
+  }
+})
+
 const app = createApp(App)
 
 app.use(createPinia())

@@ -27,7 +27,7 @@ const navGroups: NavGroup[] = [
       { label: 'Dashboard', icon: 'pi pi-th-large', to: '/app' },
       { label: 'Kasir', icon: 'pi pi-shopping-cart', to: '/app/kasir' },
       { label: 'Riwayat Transaksi', icon: 'pi pi-receipt', to: '/app/penjualan' },
-      { label: 'Order Online', icon: 'pi pi-globe', to: '/app/order-online' },
+      // { label: 'Order Online', icon: 'pi pi-globe', to: '/app/order-online' }, // disembunyikan sementara
     ],
   },
   {
