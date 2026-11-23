@@ -45,10 +45,31 @@ const sales = ref<TodaySale[]>([])
 const loading = ref(false)
 const invoiceDialog = ref(false)
 const selectedId = ref<number | null>(null)
-const startDate = ref(new Date())
-const endDate = ref(new Date())
+const range = ref<(Date | null)[] | null>([new Date(), new Date()])
 const filterPelanggan = ref<number | null>(null)
 const filterMetode = ref<string | null>(null)
+
+// Filter pelanggan/metode diedit di popup (draft), baru diterapkan saat "Terapkan".
+const filterDialog = ref(false)
+const draftPelanggan = ref<number | null>(null)
+const draftMetode = ref<string | null>(null)
+const activeFilters = computed(() => [filterPelanggan.value, filterMetode.value].filter((v) => v != null).length)
+
+function openFilter() {
+  draftPelanggan.value = filterPelanggan.value
+  draftMetode.value = filterMetode.value
+  filterDialog.value = true
+}
+function applyFilter() {
+  filterPelanggan.value = draftPelanggan.value
+  filterMetode.value = draftMetode.value
+  filterDialog.value = false
+  load()
+}
+// Rentang tanggal: muat otomatis begitu tanggal akhir dipilih.
+function onRange() {
+  if (range.value?.[1]) load()
+}
 
 const totalOmzet = computed(() => sales.value.reduce((n, s) => n + s.total, 0))
 const totalLunas = computed(() => sales.value.filter((s) => s.status === 'lunas').length)
@@ -60,10 +81,11 @@ function tgl(s: string) {
 onMounted(load)
 
 async function load() {
-  if (!startDate.value || !endDate.value) return
+  const [start, end] = range.value ?? []
+  if (!start || !end) return
   loading.value = true
   try {
-    sales.value = await checkoutApi.sales(ymd(startDate.value), ymd(endDate.value), { pelanggan: filterPelanggan.value, metode: filterMetode.value })
+    sales.value = await checkoutApi.sales(ymd(start), ymd(end), { pelanggan: filterPelanggan.value, metode: filterMetode.value })
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Gagal memuat', detail: errorMessage(e), life: 3000 })
   } finally {
@@ -106,20 +128,28 @@ function confirmDelete(s: TodaySale) {
   <div class="space-y-6">
     <!-- Filter -->
     <div class="flex flex-wrap items-end gap-3">
-      <div>
-        <label for="tgl-awal" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Dari tanggal</label>
-        <DatePicker v-model="startDate" input-id="tgl-awal" date-format="dd/mm/yy" :max-date="endDate" show-icon />
+      <div class="w-full sm:w-72">
+        <label for="tgl-range" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Tanggal</label>
+        <DatePicker
+          v-model="range"
+          input-id="tgl-range"
+          selection-mode="range"
+          date-format="dd/mm/yy"
+          :manual-input="false"
+          hide-on-range-selection
+          show-icon
+          fluid
+          @update:model-value="onRange"
+        />
       </div>
-      <div>
-        <label for="tgl-akhir" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Sampai tanggal</label>
-        <DatePicker v-model="endDate" input-id="tgl-akhir" date-format="dd/mm/yy" :min-date="startDate" show-icon />
-      </div>
-      <PelangganMetodeFilter
-        v-model:pelanggan="filterPelanggan"
-        v-model:metode="filterMetode"
-        label-class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
+      <Button
+        label="Filter"
+        icon="pi pi-filter"
+        severity="secondary"
+        outlined
+        :badge="activeFilters ? String(activeFilters) : undefined"
+        @click="openFilter"
       />
-      <Button label="Tampilkan" icon="pi pi-search" :loading="loading" @click="load" />
       <Button v-if="isAdmin" label="Log Penghapusan" icon="pi pi-history" severity="secondary" outlined class="sm:ml-auto" @click="openLog" />
     </div>
 
@@ -178,6 +208,21 @@ function confirmDelete(s: TodaySale) {
     </div>
 
     <InvoiceDialog v-model:visible="invoiceDialog" :rekap-id="selectedId" />
+
+    <Dialog v-model:visible="filterDialog" modal header="Filter Transaksi" :style="{ width: '24rem' }">
+      <div class="space-y-4">
+        <PelangganMetodeFilter
+          v-model:pelanggan="draftPelanggan"
+          v-model:metode="draftMetode"
+          stacked
+          label-class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
+        />
+      </div>
+      <template #footer>
+        <Button label="Reset" text severity="secondary" @click="draftPelanggan = draftMetode = null" />
+        <Button label="Terapkan" icon="pi pi-check" @click="applyFilter" />
+      </template>
+    </Dialog>
 
     <Dialog v-model:visible="logDialog" modal header="Log Penghapusan Transaksi" :style="{ width: '52rem' }" class="mx-4">
       <DataTable :value="logRows" :loading="loadingLog" paginator :rows="10" data-key="id" class="text-sm" responsive-layout="scroll">

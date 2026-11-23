@@ -6,7 +6,7 @@ import { catalogApi } from '@/api'
 
 const pelanggan = defineModel<number | null>('pelanggan', { default: null })
 const metode = defineModel<string | null>('metode', { default: null })
-defineProps<{ labelClass?: string }>()
+defineProps<{ labelClass?: string; stacked?: boolean }>() // stacked: lebar penuh (mis. di dalam dialog)
 
 const pelangganOpts = ref<{ label: string; value: number }[]>([])
 const metodeOpts = ref<string[]>([])
@@ -20,7 +20,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="w-full sm:w-56">
+  <div :class="stacked ? 'w-full' : 'w-full sm:w-56'">
     <label for="filter-pelanggan" :class="labelClass">Pelanggan</label>
     <Select
       v-model="pelanggan"
@@ -34,7 +34,7 @@ onMounted(async () => {
       fluid
     />
   </div>
-  <div class="w-full sm:w-48">
+  <div :class="stacked ? 'w-full' : 'w-full sm:w-48'">
     <label for="filter-metode" :class="labelClass">Metode bayar</label>
     <Select v-model="metode" input-id="filter-metode" :options="metodeOpts" show-clear placeholder="Semua metode" fluid />
   </div>

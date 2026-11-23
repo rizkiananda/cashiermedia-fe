@@ -102,7 +102,7 @@ async function viewDetail(id: number) {
           <p class="text-sm text-slate-500">Barang kembali dari pelanggan</p>
         </div>
       </div>
-      <Button label="Retur Baru" icon="pi pi-plus" @click="openForm" />
+      <Button label="Tambah" icon="pi pi-plus" @click="openForm" />
     </div>
 
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">

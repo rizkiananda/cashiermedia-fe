@@ -110,7 +110,7 @@ async function save() {
           <p class="text-sm text-slate-500">Deposit dari pelanggan & ke supplier</p>
         </div>
       </div>
-      <Button label="Catat Uang Muka" icon="pi pi-plus" @click="openForm" />
+      <Button label="Tambah" icon="pi pi-plus" @click="openForm" />
     </div>
 
     <div class="mb-4 flex gap-2">

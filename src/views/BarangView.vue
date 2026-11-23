@@ -221,7 +221,7 @@ async function removeHarga(h: BarangHarga) {
         <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <InputText v-model="search" placeholder="Cari nama / kode barang…" class="w-full !pl-10" @input="onSearch" />
       </span>
-      <Button label="Tambah Barang" icon="pi pi-plus" @click="openCreateBarang" />
+      <Button label="Tambah" icon="pi pi-plus" @click="openCreateBarang" />
     </div>
 
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">

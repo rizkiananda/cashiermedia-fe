@@ -246,7 +246,7 @@ onMounted(() => {
 
     <!-- Diskon strata -->
     <div v-if="tab === 'strata'">
-      <div class="mb-4 flex justify-end"><Button label="Tambah Diskon" icon="pi pi-plus" @click="openDiskonForm" /></div>
+      <div class="mb-4 flex justify-end"><Button label="Tambah" icon="pi pi-plus" @click="openDiskonForm" /></div>
       <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <DataTable :value="diskonRows" :loading="loadingDiskon" paginator :rows="10" class="text-sm">
           <template #empty><div class="py-10 text-center text-slate-400">Belum ada diskon strata.</div></template>
@@ -264,7 +264,7 @@ onMounted(() => {
 
     <!-- Promo -->
     <div v-else>
-      <div class="mb-4 flex justify-end"><Button label="Tambah Promo" icon="pi pi-plus" @click="openPromoForm" /></div>
+      <div class="mb-4 flex justify-end"><Button label="Tambah" icon="pi pi-plus" @click="openPromoForm" /></div>
       <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <DataTable :value="promoRows" :loading="loadingPromo" paginator :rows="10" class="text-sm">
           <template #empty><div class="py-10 text-center text-slate-400">Belum ada promo.</div></template>

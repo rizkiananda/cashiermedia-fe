@@ -43,6 +43,11 @@ body {
   background: rgba(100, 116, 139, 0.55);
 }
 
+/* Dialog tidak boleh lebih lebar dari layar (mobile); isi lebar seperti tabel di-scroll di dalamnya. */
+.p-dialog {
+  max-width: calc(100vw - 2rem);
+}
+
 /* Utility untuk area yang bisa di-scroll dalam panel */
 .scroll-area {
   overflow-y: auto;

@@ -91,7 +91,7 @@ async function save() {
           <p class="text-sm text-slate-500">Transfer stok antar perusahaan/gudang</p>
         </div>
       </div>
-      <Button label="Mutasi Baru" icon="pi pi-plus" @click="openForm" />
+      <Button label="Tambah" icon="pi pi-plus" @click="openForm" />
     </div>
 
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">

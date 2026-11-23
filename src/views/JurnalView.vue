@@ -167,7 +167,7 @@ async function save() {
     <!-- Entri -->
     <div v-if="tab === 'entri'">
       <div class="mb-4 flex justify-end">
-        <Button label="Entri Baru" icon="pi pi-plus" @click="openForm" />
+        <Button label="Tambah" icon="pi pi-plus" @click="openForm" />
       </div>
       <div class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
         <DataTable :value="entri" :loading="loading" paginator :rows="10" class="text-sm">
